@@ -156,7 +156,7 @@
           };
       
           events['onConsentReady'] = function(){
-              console.log("RECEIVED onConsentReady");
+              console.log("RECEIVED onConsentReady with ", arguments);
               // onConsentReady is on the page load if the user has made a choice already
               // or on save from the privacy manager.          
               // Wait until the current event is fully handled
