@@ -24,7 +24,7 @@
           if( window.__uspapi ){
               window.__uspapi('getUSPData', 2,
                               (uspData, success) => {
-                                  // console.log("getUSPData: ", uspData,success);
+                                  console.log("getUSPData: ", uspData,success);
                                   if( success ){
                                       // Activate the callbacks.
                                       window._gu_ccpa.onConsent.forEach( (cb) => {
@@ -219,7 +219,7 @@
           }else if( consentType === 'ccpa' ){
               // The sourcepoint CCPA case.
               window._gu_ccpa.onConsent.push(function(ccpaString){
-                  // console.log("Got ccpaString = " + ccpaString);
+                  console.log("Got ccpaString ( V2 ) = " + ccpaString);
                   // Check here for string meaning: https://github.com/InteractiveAdvertisingBureau/USPrivacy/blob/master/CCPA/US%20Privacy%20String.md
                   if( ccpaString.match(/^2.Y/gi) ){
                       // Opt-out => 
