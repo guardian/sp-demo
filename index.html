@@ -15,6 +15,18 @@
           document.head.appendChild(script);
       }
 
+      function traceTCFData(where){
+          if( ! window.__tcfapi ){
+              console.log(where + " NO __tcfapi");
+              return;
+          }
+          window.__tcfapi('getTCData', 2, (tcData, success) => {
+              console.log(where + " **getTCFData: ", success, tcData );
+          }, []);
+      }
+
+      
+
       function traceUSPData(where){
           if( ! window.__uspapi ){
               console.log(where + " NO __uspapi");
@@ -32,6 +44,7 @@
       ['beforeunload', 'DOMContentLoaded', 'load', 'unload' ].forEach( event => {
           window.addEventListener(event, e => {
               traceUSPData("On window " + event );
+              traceTCFData("On window " + event );
           });
       });
       
@@ -89,8 +102,12 @@
       var accountId = 1257;
 
       function setupTCFv2(){
+          traceTCFData("Before stub");
+
           // TCFv2 sourcepoint stub (see https://documentation.sourcepoint.com/web-implementation/sourcepoint-gdpr-and-tcf-v2-support-beta ) 
           (function () { var e = function () { var e, t = "__tcfapiLocator", a = [], n = window; for (; n;) { try { if (n.frames[t]) { e = n; break } } catch (e) { } if (n === window.top) break; n = n.parent } e || (!function e() { var a = n.document, r = !!n.frames[t]; if (!r) if (a.body) { var i = a.createElement("iframe"); i.style.cssText = "display:none", i.name = t, a.body.appendChild(i) } else setTimeout(e, 5); return !r }(), n.__tcfapi = function () { for (var e, t = arguments.length, n = new Array(t), r = 0; r < t; r++)n[r] = arguments[r]; if (!n.length) return a; if ("setGdprApplies" === n[0]) n.length > 3 && 2 === parseInt(n[1], 10) && "boolean" == typeof n[3] && (e = n[3], "function" == typeof n[2] && n[2]("set", !0)); else if ("ping" === n[0]) { var i = { gdprApplies: e, cmpLoaded: !1, cmpStatus: "stub" }; "function" == typeof n[2] && n[2](i) } else a.push(n) }, n.addEventListener("message", (function (e) { var t = "string" == typeof e.data, a = {}; try { a = t ? JSON.parse(e.data) : e.data } catch (e) { } var n = a.__tcfapiCall; n && window.__tcfapi(n.command, n.version, (function (a, r) { var i = { __tcfapiReturn: { returnValue: a, success: r, callId: n.callId } }; t && (i = JSON.stringify(i)), e.source.postMessage(i, "*") }), n.parameter) }), !1)) }; "undefined" != typeof module ? module.exports = e : e() })();
+
+          traceTCFData("Right After stub");
 
 
           var events = {};
@@ -125,7 +142,9 @@
                   events,
               },
           };
+          traceTCFData("Before script");
           insertScript('https://gdpr-tcfv2.sp-prod.net/wrapperMessagingWithoutDetection.js');
+          traceTCFData("After script");
       }
       
 
@@ -236,6 +255,8 @@
           
       }else if( consentType  === 'tcfv2' ){
           setupTCFv2();
+
+          traceTCFData("Just after setup TCFv2");
       }
       
     </script>
@@ -250,6 +271,7 @@
     <script>
 
       traceUSPData("Just before some G Specific code");
+      traceTCFData("Just before some G Specific code");
       
       // Wrap onIabConsentNotification
       // Note: you might want to rename that as not everything is Iab maybe?
@@ -315,6 +337,8 @@
     <script>
 
       traceUSPData("Anther G code layer");
+      traceTCFData("Anther G code layer");
+
 
       // Consuming code.
       // Examples taken from third-party-tags.js (in frontend/commercial code).
@@ -336,6 +360,8 @@
 
     <script>
       traceUSPData("First script in body");
+      traceTCFData("First script in body");
+
     </script>
     
     <h1>Hello Brave SP CCPA &amp; TCFv2 world (best viewed in Chrome)</h1>
@@ -369,6 +395,7 @@
 
     <script>
       traceUSPData("Last script in body");
+      traceTCFData("Last script in body");
     </script>
 </boby>
 </html>
