@@ -14,11 +14,35 @@
           script.async = true;
           document.head.appendChild(script);
       }
+
+      function traceUSPData(where){
+          if( ! window.__uspapi ){
+              console.log(where + " NO __uspapi");
+              return;
+          }
+          window.__uspapi('getUSPData', 2,
+                          (uspData, success) => {
+                              console.log(where + " **getUSPData: ", success, uspData );
+                          });
+      }
+
+      traceUSPData("Right after definition");
+
+      // TraceUSPData on window events
+      ['beforeunload', 'DOMContentLoaded', 'load', 'unload' ].forEach( event => {
+          window.addEventListener(event, e => {
+              traceUSPData("On window " + event );
+          });
+      });
+      
     </script>    
 
     <script>
       // Where the callbacks receiving the CCPA string will live
       window._gu_ccpa = { onConsent: [] };
+
+
+      
       function fetchUSPdata(){
           // query getUSPData
           if( window.__uspapi ){
@@ -106,8 +130,14 @@
       
 
       function setupCCPA(){
+
+          traceUSPData("Just Before stub");
+
+          
           // sourcepoint ccpa stub . See https://documentation.sourcepoint.com/web-implementation/sourcepoint-setup-and-ccpa-configuration
           (function () { var e = false; var c = window; var t = document; function r() { if (!c.frames["__uspapiLocator"]) { if (t.body) { var a = t.body; var e = t.createElement("iframe"); e.style.cssText = "display:none"; e.name = "__uspapiLocator"; a.appendChild(e) } else { setTimeout(r, 5) } } } r(); function p() { var a = arguments; __uspapi.a = __uspapi.a || []; if (!a.length) { return __uspapi.a } else if (a[0] === "ping") { a[2]({ gdprAppliesGlobally: e, cmpLoaded: false }, true) } else { __uspapi.a.push([].slice.apply(a)) } } function l(t) { var r = typeof t.data === "string"; try { var a = r ? JSON.parse(t.data) : t.data; if (a.__cmpCall) { var n = a.__cmpCall; c.__uspapi(n.command, n.parameter, function (a, e) { var c = { __cmpReturn: { returnValue: a, success: e, callId: n.callId } }; t.source.postMessage(r ? JSON.stringify(c) : c, "*") }) } } catch (a) { } } if (typeof __uspapi !== "function") { c.__uspapi = p; __uspapi.msgHandler = l; c.addEventListener("message", l, false) } })();
+
+          traceUSPData("Just after stub");
           
           // Callbacks from https://documentation.sourcepoint.com/web-implementation/sourcepoint-set-up-and-configuration-v2/optional-callbacks
           // Events when we know about the consent
@@ -179,7 +209,12 @@
               },
           };
 
+          traceUSPData("Just before SP/CCPA script");
+
           insertScript('https://ccpa.sp-prod.net/ccpa.js');
+
+          traceUSPData("Just after SP/CCPA script");
+
       }
 
       function showPM(){
@@ -196,6 +231,9 @@
       // Instanciate the right consentType.
       if( consentType === 'ccpa' ){
           setupCCPA();
+
+          traceUSPData("Just after setupCCPA");
+          
       }else if( consentType  === 'tcfv2' ){
           setupTCFv2();
       }
@@ -211,6 +249,8 @@
     <!-- And now, the guardian glue -->
     <script>
 
+      traceUSPData("Just before some G Specific code");
+      
       // Wrap onIabConsentNotification
       // Note: you might want to rename that as not everything is Iab maybe?
       function onIabConsentNotification(callback){
@@ -272,24 +312,31 @@
       
     </script>
 
-        <script>
-          // Consuming code.
-          // Examples taken from third-party-tags.js (in frontend/commercial code).
-          onGuConsentNotification('performance' , granted => {
-              console.log("'onGuConsentNotification': User granted 'performance' (TCFv1 Spoofed from " + consentType + " ) = " , granted );
-              document.getElementById('performanceDisplay').innerHTML = JSON.stringify(granted);
-          });
+    <script>
 
-          onIabConsentNotification( purposeStates => {
-              console.log("'onIabConsentNotification': User granted AIB purposes (TCFv1 spoofed from " + consentType + " ) = ", purposeStates );
-              document.getElementById('purposeStateDisplay').innerHTML = JSON.stringify(purposeStates);
-          });
+      traceUSPData("Anther G code layer");
+
+      // Consuming code.
+      // Examples taken from third-party-tags.js (in frontend/commercial code).
+      onGuConsentNotification('performance' , granted => {
+          console.log("'onGuConsentNotification': User granted 'performance' (TCFv1 Spoofed from " + consentType + " ) = " , granted );
+          document.getElementById('performanceDisplay').innerHTML = JSON.stringify(granted);
+      });
+      
+      onIabConsentNotification( purposeStates => {
+          console.log("'onIabConsentNotification': User granted AIB purposes (TCFv1 spoofed from " + consentType + " ) = ", purposeStates );
+          document.getElementById('purposeStateDisplay').innerHTML = JSON.stringify(purposeStates);
+      });
       
     </script>
 
 
   </head>
   <body>
+
+    <script>
+      traceUSPData("First script in body");
+    </script>
     
     <h1>Hello Brave SP CCPA &amp; TCFv2 world (best viewed in Chrome)</h1>
 
@@ -320,5 +367,8 @@
       <em>Note: Clear the cookies to see the banners again. Especially in CCPA mode</em>
     </h2>
 
+    <script>
+      traceUSPData("Last script in body");
+    </script>
 </boby>
 </html>
