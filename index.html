@@ -82,16 +82,25 @@
       function fetchTCFv2Data(){
           // See https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework/blob/master/TCFv2/IAB%20Tech%20Lab%20-%20CMP%20API%20v2.md#gettcdata
           __tcfapi('getTCData', 2, (tcData, success) => {
-              // console.log(tcData, success);
+              console.log("SEE getTCData below:");
+              console.log(tcData, success);
+
               if(success) {
-                  // give the full tcData to the callback
-                  window._gu_tcfv2.onConsent.forEach( (cb) => {
-                      cb(tcData);
-                  });
+                  // Add the custom vendors to the mix.
+                  // See Soucerpoint extension to standard TCFv2:
+                  // https://documentation.sourcepoint.com/web-implementation/sourcepoint-gdpr-and-tcf-v2-support-beta/__tcfapi-getcustomvendorconsents-api
+                  __tcfapi('getCustomVendorConsents', 2, function(customVendors, successCustom) {
+                      console.log("SEE getCustomVendorConsents" , customVendors );
+                      if( successCustom ){
+                          // give the full tcData AND the customVendors  to the callback
+                          window._gu_tcfv2.onConsent.forEach( (cb) => {
+                              cb(tcData, customVendors);
+                          });
+                      }
+                  })
+                  
               }
-          }, []);
-          // ^^ Note we dont care about vendors IDs yet (only about the purposes), as we
-          // dont have specific vendors yet.
+          }, []); // <-- We dont care about vendor IDs (only IAB vendors anyway)
       }
       
     </script>
@@ -104,12 +113,12 @@
       var accountId = 1257;
 
       function setupTCFv2(){
-          traceTCFData("Before stub");
+          //traceTCFData("Before stub");
 
           // TCFv2 sourcepoint stub (see https://documentation.sourcepoint.com/web-implementation/sourcepoint-gdpr-and-tcf-v2-support-beta ) 
           (function () { var e = function () { var e, t = "__tcfapiLocator", a = [], n = window; for (; n;) { try { if (n.frames[t]) { e = n; break } } catch (e) { } if (n === window.top) break; n = n.parent } e || (!function e() { var a = n.document, r = !!n.frames[t]; if (!r) if (a.body) { var i = a.createElement("iframe"); i.style.cssText = "display:none", i.name = t, a.body.appendChild(i) } else setTimeout(e, 5); return !r }(), n.__tcfapi = function () { for (var e, t = arguments.length, n = new Array(t), r = 0; r < t; r++)n[r] = arguments[r]; if (!n.length) return a; if ("setGdprApplies" === n[0]) n.length > 3 && 2 === parseInt(n[1], 10) && "boolean" == typeof n[3] && (e = n[3], "function" == typeof n[2] && n[2]("set", !0)); else if ("ping" === n[0]) { var i = { gdprApplies: e, cmpLoaded: !1, cmpStatus: "stub" }; "function" == typeof n[2] && n[2](i) } else a.push(n) }, n.addEventListener("message", (function (e) { var t = "string" == typeof e.data, a = {}; try { a = t ? JSON.parse(e.data) : e.data } catch (e) { } var n = a.__tcfapiCall; n && window.__tcfapi(n.command, n.version, (function (a, r) { var i = { __tcfapiReturn: { returnValue: a, success: r, callId: n.callId } }; t && (i = JSON.stringify(i)), e.source.postMessage(i, "*") }), n.parameter) }), !1)) }; "undefined" != typeof module ? module.exports = e : e() })();
 
-          traceTCFData("Right After stub");
+          //traceTCFData("Right After stub");
 
 
           var events = {};
@@ -121,13 +130,14 @@
                                 'onPrivacyManagerAction','onConsentReady', 'onPMCancel',
                                 'onSPPMObjectReady'];
           // Generic event handling
-          //callbackEvents.forEach( (eName) => {
-          //    events[eName] = genericCallback( eName );
-          //});
+          // callbackEvents.forEach( (eName) => {
+          //     events[eName] = genericCallback( eName );
+          // });
 
           events['onConsentReady'] = function(){
               // Make sure the current event handler is all finished
               // before looking in the TCFv2 data.
+              // console.log("ON CONSENT READY TCFv2: ", arguments);
               setTimeout(fetchTCFv2Data,0);
           }
           
@@ -144,9 +154,9 @@
                   events,
               },
           };
-          traceTCFData("Before script");
+          //traceTCFData("Before script");
           insertScript('https://gdpr-tcfv2.sp-prod.net/wrapperMessagingWithoutDetection.js');
-          traceTCFData("After script");
+          //traceTCFData("After script");
       }
       
 
@@ -296,8 +306,8 @@
                   }
               });
           }else if( consentType === 'tcfv2' ){
-              window._gu_tcfv2.onConsent.push(function(tcData){
-                  callback( tcData.purpose.consents );
+              window._gu_tcfv2.onConsent.push(function(tcData, customVendors){
+                  callback( tcData.purpose.consents , customVendors );
               });
 
           }else{
@@ -338,8 +348,12 @@
 
     <script>
 
-      traceUSPData("Anther G code layer");
-      traceTCFData("Anther G code layer");
+      //traceUSPData("Anther G code layer");
+      //traceTCFData("Anther G code layer");
+
+      var customVendorsNames = {}
+      customVendorsNames['5eff0d77969bfa03746427eb'] = 'Permutive';
+      const customVendorsIds = ['5eff0d77969bfa03746427eb'];
 
 
       // Consuming code.
@@ -349,9 +363,19 @@
           document.getElementById('performanceDisplay').innerHTML = JSON.stringify(granted);
       });
       
-      onIabConsentNotification( purposeStates => {
+      onIabConsentNotification( ( purposeStates, customVendors ) => {
           console.log("'onIabConsentNotification': User granted AIB purposes (TCFv1 spoofed from " + consentType + " ) = ", purposeStates );
           document.getElementById('purposeStateDisplay').innerHTML = JSON.stringify(purposeStates);
+
+          if( customVendors ){
+              console.log("Got custom vendors: " , customVendors );
+              document.getElementById('customGrantsDisplay').innerHTML =
+                  JSON.stringify( customVendorsIds.map( (id) => { console.log("Looking at " , id );
+                                                                  return Object.assign({ name: customVendorsNames[id] }, customVendors.grants[id]);
+                                                                } ),
+                                  null,
+                                  2);
+          }
       });
       
     </script>
@@ -378,6 +402,9 @@
 
     <h3>The Purpose State (from onIabConsentNotification)  is:</h3>
     <pre id="purposeStateDisplay" style="background: black; color: Lime">-unknown-</pre>
+
+    <h4>Custom vendor grants:</h4>
+    <pre id="customGrantsDisplay" style="background: black; color: Lime">-no custom vendors grants-</pre>
 
     <h3>The 'performance' consent (from onGuConsentNotification) is: <span  style="background: black; color: Lime; font-size: 1.2em" id="performanceDisplay">null</span></h3>
 
