@@ -371,8 +371,8 @@
           if( customVendors ){
               console.log("Got custom vendors: " , customVendors );
               document.getElementById('customGrantsDisplay').innerHTML =
-                  JSON.stringify( customVendorsIds.map( (id) => { console.log("Looking at " , id );
-                                                                  return Object.assign({ name: customVendorsNames[id] }, customVendors.grants[id]);
+                  JSON.stringify( customVendorsIds.map( (id) => { 
+                      return Object.assign({ name: customVendorsNames[id], id: id }, customVendors.grants[id]);
                                                                 } ),
                                   null,
                                   2);
