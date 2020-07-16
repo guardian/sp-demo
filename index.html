@@ -4,12 +4,16 @@
     <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://wrapper-api.sp-prod.net https://gdpr-tcfv2.sp-prod.net https://message.sp-prod.net https://ccpa-service.sp-prod.net https://ccpa-notice.sp-prod.net  https://ccpa.sp-prod.net  data: wss: 'unsafe-inline'"> -->
 
     <script>
+      
       // Shamelessly copied utilities from SO:
       function deleteAllCookies() {
           document.cookie.split(";").forEach(function(c) {
               document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
           });
       }
+
+      
+      
       function insertScript(url){
           var script = document.createElement('script');
           script.src = url;
@@ -115,8 +119,7 @@
       function setupTCFv2(){
           //traceTCFData("Before stub");
 
-          // TCFv2 sourcepoint stub (see https://documentation.sourcepoint.com/web-implementation/sourcepoint-gdpr-and-tcf-v2-support-beta ) 
-          (function () { var e = function () { var e, t = "__tcfapiLocator", a = [], n = window; for (; n;) { try { if (n.frames[t]) { e = n; break } } catch (e) { } if (n === window.top) break; n = n.parent } e || (!function e() { var a = n.document, r = !!n.frames[t]; if (!r) if (a.body) { var i = a.createElement("iframe"); i.style.cssText = "display:none", i.name = t, a.body.appendChild(i) } else setTimeout(e, 5); return !r }(), n.__tcfapi = function () { for (var e, t = arguments.length, n = new Array(t), r = 0; r < t; r++)n[r] = arguments[r]; if (!n.length) return a; if ("setGdprApplies" === n[0]) n.length > 3 && 2 === parseInt(n[1], 10) && "boolean" == typeof n[3] && (e = n[3], "function" == typeof n[2] && n[2]("set", !0)); else if ("ping" === n[0]) { var i = { gdprApplies: e, cmpLoaded: !1, cmpStatus: "stub" }; "function" == typeof n[2] && n[2](i) } else a.push(n) }, n.addEventListener("message", (function (e) { var t = "string" == typeof e.data, a = {}; try { a = t ? JSON.parse(e.data) : e.data } catch (e) { } var n = a.__tcfapiCall; n && window.__tcfapi(n.command, n.version, (function (a, r) { var i = { __tcfapiReturn: { returnValue: a, success: r, callId: n.callId } }; t && (i = JSON.stringify(i)), e.source.postMessage(i, "*") }), n.parameter) }), !1)) }; "undefined" != typeof module ? module.exports = e : e() })();
+    !function () { var e = function () { var e, t = "__tcfapiLocator", a = [], n = window; for (; n;) { try { if (n.frames[t]) { e = n; break } } catch (e) { } if (n === window.top) break; n = n.parent } e || (!function e() { var a = n.document, r = !!n.frames[t]; if (!r) if (a.body) { var i = a.createElement("iframe"); i.style.cssText = "display:none", i.name = t, a.body.appendChild(i) } else setTimeout(e, 5); return !r }(), n.__tcfapi = function () { for (var e, t = arguments.length, n = new Array(t), r = 0; r < t; r++)n[r] = arguments[r]; if (!n.length) return a; if ("setGdprApplies" === n[0]) n.length > 3 && 2 === parseInt(n[1], 10) && "boolean" == typeof n[3] && (e = n[3], "function" == typeof n[2] && n[2]("set", !0)); else if ("ping" === n[0]) { var i = { gdprApplies: e, cmpLoaded: !1, cmpStatus: "stub" }; "function" == typeof n[2] && n[2](i) } else a.push(n) }, n.addEventListener("message", (function (e) { var t = "string" == typeof e.data, a = {}; try { a = t ? JSON.parse(e.data) : e.data } catch (e) { } var n = a.__tcfapiCall; n && window.__tcfapi(n.command, n.version, (function (a, r) { var i = { __tcfapiReturn: { returnValue: a, success: r, callId: n.callId } }; t && (i = JSON.stringify(i)), e.source.postMessage(i, "*") }), n.parameter) }), !1)) }; "undefined" != typeof module ? module.exports = e : e() }();
 
           //traceTCFData("Right After stub");
 
@@ -130,17 +133,20 @@
                                 'onPrivacyManagerAction','onConsentReady', 'onPMCancel',
                                 'onSPPMObjectReady'];
           // Generic event handling
-          // callbackEvents.forEach( (eName) => {
-          //     events[eName] = genericCallback( eName );
-          // });
+          callbackEvents.forEach( (eName) => {
+              events[eName] = genericCallback( eName );
+          });
 
-          events['onConsentReady'] = function(){
-              // Make sure the current event handler is all finished
-              // before looking in the TCFv2 data.
-              // console.log("ON CONSENT READY TCFv2: ", arguments);
-              setTimeout(fetchTCFv2Data,0);
-          }
-          
+          const triggeringEvents = [ 'onConsentReady'];
+
+          triggeringEvents.foreach( (event) => {
+              events[event] = function(){
+                  // Make sure the current event handler is all finished
+                  // before looking in the TCFv2 data.
+                  // console.log("ON CONSENT READY TCFv2: ", arguments);
+                  setTimeout(fetchTCFv2Data,0);
+              };
+          });          
 
           window._sp_ = {
               config: {
@@ -215,15 +221,21 @@
                   setTimeout(fetchUSPdata, 0);
               }
           };
-      
-          events['onConsentReady'] = function(){
-              console.log("RECEIVED onConsentReady with ", arguments);
-              // onConsentReady is on the page load if the user has made a choice already
-              // or on save from the privacy manager.          
-              // Wait until the current event is fully handled
-              // to guarantee having the right data right after a rejectall/acceptall event.
-              setTimeout(fetchUSPdata, 0);
-          };
+
+
+          // Also trigger the USP data fetching and callbacks
+          // assuming no opt-out during the message display.
+          const triggeringEvents = ['onConsentReady', 'onMessageReady' ];
+          triggeringEvents.forEach( (event) => {
+              events[event] = function(){
+                  console.log("RECEIVED onConsentReady with ", arguments);
+                  // onConsentReady is on the page load if the user has made a choice already
+                  // or on save from the privacy manager.          
+                  // Wait until the current event is fully handled
+                  // to guarantee having the right data right after a rejectall/acceptall event.
+                  setTimeout(fetchUSPdata, 0);
+              };
+          });
       
           window._sp_ccpa = {
               config: {
