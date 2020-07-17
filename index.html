@@ -139,7 +139,7 @@
 
           const triggeringEvents = [ 'onConsentReady'];
 
-          triggeringEvents.foreach( (event) => {
+          triggeringEvents.forEach( (event) => {
               events[event] = function(){
                   // Make sure the current event handler is all finished
                   // before looking in the TCFv2 data.
