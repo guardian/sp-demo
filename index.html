@@ -4,6 +4,14 @@
     <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://wrapper-api.sp-prod.net https://gdpr-tcfv2.sp-prod.net https://message.sp-prod.net https://ccpa-service.sp-prod.net https://ccpa-notice.sp-prod.net  https://ccpa.sp-prod.net  data: wss: 'unsafe-inline'"> -->
 
     <script>
+      var consentType = location.search.substr(1) || 'tcfv2';
+      var accountId = 1257;
+      // var tcfv2Href = 'http://theguardian.eteve.net';
+      var tcfv2Href = 'https://GuardianJobs/';
+
+    </script>
+
+    <script>
       
       // Shamelessly copied utilities from SO:
       function deleteAllCookies() {
@@ -112,10 +120,6 @@
     
     <!-- Our config -->
     <script>
-      var consentType = location.search.substr(1) || 'tcfv2';
-      
-      var accountId = 1257;
-
       function setupTCFv2(){
           //traceTCFData("Before stub");
 
@@ -153,7 +157,7 @@
                   mmsDomain: 'https://message.sp-prod.net',
                   wrapperAPIOrigin: "https://wrapper-api.sp-prod.net/tcfv2",
                   accountId,
-                  propertyHref: 'http://theguardian.eteve.net',
+                  propertyHref: tcfv2Href,
                   targetingParams: {
                       myctype: 'tcfv2'
                   },
@@ -264,7 +268,8 @@
           if( consentType === 'ccpa' ){
               window._sp_ccpa.loadPrivacyManagerModal(null, '5eba7ef78c167c47ca8b433d');
           }else if ( consentType === 'tcfv2' ){
-              window._sp_.loadPrivacyManagerModal('145943');
+              //window._sp_.loadPrivacyManagerModal('145943');
+              window._sp_.loadPrivacyManagerModal('183633');
           }else {
               console.log("Woopsy , unknown consent type.");
           }
@@ -405,9 +410,10 @@
     
     <h1>Hello Brave SP CCPA &amp; TCFv2 world (best viewed in Chrome)</h1>
 
-    <p>
-      This is a demo of the property theguardian.eteve.net in the sourcepoint account (setup for CCPA AND TCFv2).
-    </p>
+    <h3>
+      This is a demo of the property theguardian.eteve.net(CCPA mode) or
+      GuardianJobs(TCFv2 mode) in the sourcepoint account.
+    </h3>
 
     <h2>
           You are in <b style="background: yellow"><script>document.write(consentType)</script></b> mode.
