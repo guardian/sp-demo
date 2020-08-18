@@ -147,7 +147,7 @@
               events[event] = function(){
                   // Make sure the current event handler is all finished
                   // before looking in the TCFv2 data.
-                  // console.log("ON CONSENT READY TCFv2: ", arguments);
+                  console.log("[TCFV2] received " + event + " : ", arguments);
                   setTimeout(fetchTCFv2Data,0);
               };
           });          
@@ -218,7 +218,7 @@
               // Only consider acceptAll (11) or rejectAll(13).
               // ( see https://documentation.sourcepoint.com/web-implementation/sourcepoint-set-up-and-configuration-v2/optional-callbacks )
               // Note that the action of saving from the privacy manager triggeras the onConsentReady instead.
-              console.log("RECEIVED onMessageChoiceSelect with choice_type_id = " + choice_type_id);
+              console.log("[CCPA] received onMessageChoiceSelect with choice_type_id = " + choice_type_id);
               if( choice_type_id === 11 ||
                   choice_type_id === 13
                 ){
@@ -232,7 +232,7 @@
           const triggeringEvents = ['onConsentReady', 'onMessageReady' ];
           triggeringEvents.forEach( (event) => {
               events[event] = function(){
-                  console.log("RECEIVED onConsentReady with ", arguments);
+                  console.log("[CCPA] received " + event + " with ", arguments);
                   // onConsentReady is on the page load if the user has made a choice already
                   // or on save from the privacy manager.          
                   // Wait until the current event is fully handled
